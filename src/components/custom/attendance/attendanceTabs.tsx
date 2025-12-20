@@ -14,6 +14,9 @@ export default function AttendanceTabs({ data, activeDay, setActiveDay, calendar
   const [showPredictor, setShowPredictor] = useState(false);
   const slotMap = config.slotMap;
 
+  // Get current day
+  const currentDay = new Date().toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
+
   const dayCardsMap = {};
   days.forEach((day) => (dayCardsMap[day] = []));
 
@@ -161,19 +164,34 @@ export default function AttendanceTabs({ data, activeDay, setActiveDay, calendar
 
       {/* Days navigation */}
       <div className="flex gap-2 justify-center flex-wrap px-2">
-        {daysWithClasses.map((d) => (
-          <button
-            key={d}
-            onClick={() => setActiveDay(d)}
-            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
-              activeDay === d
-                ? "bg-slate-700 text-white shadow-lg scale-105 dark:bg-slate-600 midnight:bg-slate-800"
-                : "bg-white text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 midnight:bg-gray-900 midnight:text-slate-200 midnight:hover:bg-gray-800 border border-slate-200 dark:border-slate-700 midnight:border-gray-800"
-            }`}
-          >
-            {d}
-          </button>
-        ))}
+        {daysWithClasses.map((d) => {
+          const isCurrentDay = d === currentDay;
+          const isActive = activeDay === d;
+          
+          return (
+            <button
+              key={d}
+              onClick={() => setActiveDay(d)}
+              className={`relative px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                isActive
+                  ? "bg-slate-700 text-white shadow-lg scale-105 dark:bg-slate-600 midnight:bg-slate-700"
+                  : "bg-white text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 midnight:bg-gray-900 midnight:text-slate-200 midnight:hover:bg-gray-800 border border-slate-200 dark:border-slate-700 midnight:border-gray-800"
+              } ${
+                isCurrentDay && !isActive
+                  ? "ring-2 ring-blue-500 ring-offset-2 dark:ring-blue-400 dark:ring-offset-slate-900 midnight:ring-blue-400 midnight:ring-offset-black"
+                  : ""
+              }`}
+            >
+              {isCurrentDay && (
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                </span>
+              )}
+              {d}
+            </button>
+          );
+        })}
       </div>
 
       {/* Cards grid */}

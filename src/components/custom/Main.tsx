@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from "react";
-import { ReloadModal } from "./reloadModel";
+// Remove ReloadModal import
 import LoginForm from "./loginForm";
 import DashboardContent from "./Dashboard";
 import Footer from "./footer/Footer";
@@ -386,12 +386,29 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 midnight:bg-black flex flex-col text-gray-900 dark:text-gray-100 midnight:text-gray-100 transition-colors">
+      {/* Replace ReloadModal with toast */}
       {isReloading && (
-        <ReloadModal
-          message={message}
-          onClose={() => setIsReloading(false)}
-          progressBar={progressBar}
-        />
+        <div className="fixed top-4 right-4 z-50 bg-white dark:bg-slate-800 midnight:bg-black border border-slate-200 dark:border-slate-700 midnight:border-gray-800 rounded-lg shadow-lg p-4 max-w-sm animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-t-transparent border-blue-500"></div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-slate-900 dark:text-slate-100 midnight:text-slate-100">
+                Reloading data...
+              </p>
+              <div className="mt-2 w-full bg-slate-200 dark:bg-slate-700 midnight:bg-gray-800 rounded-full h-1.5">
+                <div
+                  className="h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transition-all duration-300"
+                  style={{ width: `${progressBar}%` }}
+                ></div>
+              </div>
+              {message && (
+                <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 midnight:text-slate-400 line-clamp-2">
+                  {message.split('\n').pop()}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {!isLoggedIn && (
@@ -459,10 +476,6 @@ export default function LoginPage() {
 
       <Footer
         isLoggedIn={isLoggedIn}
-        currSemesterID={currSemesterID}
-        setCurrSemesterID={setCurrSemesterID}
-        handleLogin={handleLogin}
-        setIsReloading={setIsReloading}
       />
     </div>
   );

@@ -17,6 +17,8 @@ import { useRef } from "react";
 import LeaveDisplay from "./Hostel/LeaveDisplay";
 import AllGradesDisplay from "./Exams/AllGradesDisplay";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
+import { Menu, X, Calendar, Save } from "lucide-react";
+import config from "@/app/config.json";
 
 export default function DashboardContent({
   activeTab,
@@ -57,7 +59,9 @@ export default function DashboardContent({
   sethostelData,
   setGradesData,
   setScheduleData,
-  currSemesterID
+  currSemesterID,
+  setCurrSemesterID,
+  handleLogin,
 }) {
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
@@ -66,6 +70,9 @@ export default function DashboardContent({
   const hasMoved = useRef(false);
 
   const tabsOrder = ["attendance", "exams", "hostel"];
+  const [showMobileStats, setShowMobileStats] = useState(false);
+  const [showSemesterModal, setShowSemesterModal] = useState(false);
+  const [selectedSemester, setSelectedSemester] = useState(currSemesterID);
 
   const handleTouchStart = (e) => {
     const touch = e.touches[0];
@@ -245,6 +252,15 @@ export default function DashboardContent({
     }
   };
 
+  const handleSaveSemester = async () => {
+    if (!selectedSemester) return;
+    setShowSemesterModal(false);
+    setIsReloading(true);
+    await handleLogin(selectedSemester);
+    setCurrSemesterID(selectedSemester);
+    localStorage.setItem("currSemesterID", selectedSemester);
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4">
       <div className="py-6">
@@ -263,6 +279,24 @@ export default function DashboardContent({
             </TabsList>
             
             <div className="flex gap-2">
+              {/* Semester selection button */}
+              <button
+                onClick={() => setShowSemesterModal(true)}
+                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 midnight:hover:bg-gray-800 transition-colors"
+                aria-label="Change Semester"
+              >
+                <Calendar className="w-5 h-5" />
+              </button>
+
+              {/* Mobile stats menu button */}
+              <button
+                onClick={() => setShowMobileStats(!showMobileStats)}
+                className="md:hidden p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 midnight:hover:bg-gray-800 transition-colors"
+                aria-label="Toggle Stats"
+              >
+                {showMobileStats ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+              
               <button
                 onClick={handleReloadRequest}
                 className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 midnight:hover:bg-gray-800 transition-colors"
@@ -284,17 +318,134 @@ export default function DashboardContent({
             </div>
           </div>
 
+          {/* Semester selection modal */}
+          {showSemesterModal && (
+            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-900 midnight:bg-black rounded-2xl shadow-2xl w-full max-w-md p-6 border border-slate-200 dark:border-slate-700 midnight:border-gray-800">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 midnight:text-slate-100">
+                    Select Semester
+                  </h2>
+                  <button onClick={() => setShowSemesterModal(false)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 midnight:hover:bg-gray-900">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <select
+                    value={selectedSemester}
+                    onChange={(e) => setSelectedSemester(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 midnight:border-gray-800 rounded-xl bg-white dark:bg-slate-800 midnight:bg-black text-slate-800 dark:text-slate-200 midnight:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                  >
+                    {config.semesterIDs?.map((id: string, index: number) => (
+                      <option key={index} value={id}>
+                        {id.endsWith("1") ? `FALLSEM` : `WINTERSEM`} {id.slice(4, -4)}-{id.slice(6, -2)}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    onClick={handleSaveSemester}
+                    disabled={!selectedSemester || selectedSemester === currSemesterID}
+                    className={`w-full px-4 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors ${
+                      !selectedSemester || selectedSemester === currSemesterID
+                        ? "bg-slate-300 text-slate-500 cursor-not-allowed dark:bg-slate-700 dark:text-slate-500"
+                        : "bg-slate-600 hover:bg-slate-700 text-white dark:bg-slate-700 dark:hover:bg-slate-600"
+                    }`}
+                  >
+                    <Save className="w-4 h-4" />
+                    Save & Reload Data
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="bg-gray-50 dark:bg-gray-900 midnight:bg-black min-h-screen rounded-3xl p-4">
-            <StatsCards
-              attendancePercentage={attendancePercentage}
-              ODhoursData={ODhoursData}
-              setODhoursIsOpen={setODhoursIsOpen}
-              feedbackStatus={GradesData.feedback}
-              marksData={marksData}
-              setGradesDisplayIsOpen={setGradesDisplayIsOpen}
-              CGPAHidden={CGPAHidden}
-              setCGPAHidden={setCGPAHidden}
-            />
+            {/* Desktop stats - always visible on md+ */}
+            <div className="hidden md:block">
+              <StatsCards
+                attendancePercentage={attendancePercentage}
+                ODhoursData={ODhoursData}
+                setODhoursIsOpen={setODhoursIsOpen}
+                feedbackStatus={GradesData.feedback}
+                marksData={marksData}
+                setGradesDisplayIsOpen={setGradesDisplayIsOpen}
+                CGPAHidden={CGPAHidden}
+                setCGPAHidden={setCGPAHidden}
+              />
+            </div>
+
+            {/* Mobile stats - slide-in panel */}
+            {showMobileStats && (
+              <div className="md:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={() => setShowMobileStats(false)}>
+                <div 
+                  className="absolute right-0 top-0 h-full w-80 max-w-[85vw] bg-white dark:bg-slate-900 midnight:bg-black shadow-2xl overflow-y-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="sticky top-0 bg-white dark:bg-slate-900 midnight:bg-black p-4 border-b border-slate-200 dark:border-slate-700 midnight:border-gray-800 flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 midnight:text-slate-100">Statistics</h2>
+                    <button onClick={() => setShowMobileStats(false)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 midnight:hover:bg-gray-900">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="p-4 space-y-3">
+                    <MobileStatCard
+                      title="Attendance"
+                      value={attendancePercentage.percentage || 0}
+                      color="blue"
+                      onClick={() => {}}
+                    />
+                    <MobileStatCard
+                      title="OD Hours"
+                      value={`${ODhoursData && ODhoursData.length > 0 && ODhoursData[0].courses ? ODhoursData.reduce((sum, day) => sum + day.total, 0) : 0}/40`}
+                      color="purple"
+                      onClick={() => { setODhoursIsOpen(true); setShowMobileStats(false); }}
+                    />
+                    {GradesData.feedback && (
+                      <MobileStatCard
+                        title="Feedback"
+                        value={
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-col items-center">
+                              <span className="text-xs text-slate-500 dark:text-slate-400">Mid</span>
+                              <span className={`text-xl font-bold ${GradesData.feedback?.MidSem?.Curriculum && GradesData.feedback?.MidSem?.Course ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                                {GradesData.feedback?.MidSem?.Curriculum && GradesData.feedback?.MidSem?.Course ? "✓" : "✗"}
+                              </span>
+                            </div>
+                            <div className="h-8 w-[1px] bg-slate-300 dark:bg-slate-700" />
+                            <div className="flex flex-col items-center">
+                              <span className="text-xs text-slate-500 dark:text-slate-400">End</span>
+                              <span className={`text-xl font-bold ${GradesData.feedback?.EndSem?.Curriculum && GradesData.feedback?.EndSem?.Course ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                                {GradesData.feedback?.EndSem?.Curriculum && GradesData.feedback?.EndSem?.Course ? "✓" : "✗"}
+                              </span>
+                            </div>
+                          </div>
+                        }
+                        color="amber"
+                        onClick={() => {}}
+                      />
+                    )}
+                    {marksData.cgpa && (
+                      <MobileStatCard
+                        title="CGPA"
+                        value={CGPAHidden ? "•••" : marksData?.cgpa?.cgpa}
+                        color="emerald"
+                        onClick={() => setCGPAHidden((prev) => !prev)}
+                      />
+                    )}
+                    {marksData.cgpa && (
+                      <MobileStatCard
+                        title="Credits"
+                        value={Number(marksData?.cgpa?.creditsEarned) + Number(marksData?.cgpa?.nonGradedRequirement || 0)}
+                        color="rose"
+                        onClick={() => { setGradesDisplayIsOpen(true); setShowMobileStats(false); }}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {ODhoursIsOpen && (
               <ODHoursModal
@@ -370,6 +521,26 @@ export default function DashboardContent({
           </div>
         </Tabs>
       </div>
+    </div>
+  );
+}
+
+function MobileStatCard({ title, value, color, onClick }) {
+  const colorClasses = {
+    blue: "bg-blue-50 dark:bg-blue-950/30 midnight:bg-blue-950/20 border-blue-200 dark:border-blue-800/30 midnight:border-blue-900/30 text-blue-700 dark:text-blue-300 midnight:text-blue-200",
+    purple: "bg-purple-50 dark:bg-purple-950/30 midnight:bg-purple-950/20 border-purple-200 dark:border-purple-800/30 midnight:border-purple-900/30 text-purple-700 dark:text-purple-300 midnight:text-purple-200",
+    amber: "bg-amber-50 dark:bg-amber-950/30 midnight:bg-amber-950/20 border-amber-200 dark:border-amber-800/30 midnight:border-amber-900/30 text-amber-700 dark:text-amber-300 midnight:text-amber-200",
+    emerald: "bg-emerald-50 dark:bg-emerald-950/30 midnight:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/30 midnight:border-emerald-900/30 text-emerald-700 dark:text-emerald-300 midnight:text-emerald-200",
+    rose: "bg-rose-50 dark:bg-rose-950/30 midnight:bg-rose-950/20 border-rose-200 dark:border-rose-800/30 midnight:border-rose-900/30 text-rose-700 dark:text-rose-300 midnight:text-rose-200",
+  };
+
+  return (
+    <div 
+      className={`p-4 rounded-xl border cursor-pointer hover:shadow-md transition-all ${colorClasses[color]}`}
+      onClick={onClick}
+    >
+      <h3 className="text-sm font-semibold mb-2">{title}</h3>
+      <div className="text-2xl font-bold">{value}</div>
     </div>
   );
 }

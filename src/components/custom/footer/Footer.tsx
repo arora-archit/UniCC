@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Github, Settings, Link } from "lucide-react";
+import { Github, Database, Link } from "lucide-react";
 import { ModeToggle } from "../toggle";
 import { Button } from "../../ui/button";
 import DataPage from "./SettingsPage";
@@ -62,7 +62,7 @@ export default function Footer({ isLoggedIn, currSemesterID, setCurrSemesterID, 
 
   return (
     <footer className="bg-transparent text-slate-700 dark:text-slate-300 midnight:text-slate-300 flex items-center justify-center">
-      {showStoragePage && isLoggedIn && <DataPage handleClose={() => setShowStoragePage(false)} handleDeleteItem={handleDeleteItem} storageData={storageData} currSemesterID={currSemesterID} setCurrSemesterID={setCurrSemesterID} handleLogin={handleLogin} setIsReloading={setIsReloading} />}
+      {showStoragePage && isLoggedIn && <DataPage handleClose={() => setShowStoragePage(false)} handleDeleteItem={handleDeleteItem} storageData={storageData} />}
       {showPolicy && <PrivacyPolicyPage handleClose={() => setShowPolicy(false)} />}
       {showTOS && <TermsOfServicePage handleClose={() => setShowTOS(false)} />}
       <div className="max-w-7xl mx-auto px-3 py-6 text-center w-full">
@@ -99,7 +99,7 @@ export default function Footer({ isLoggedIn, currSemesterID, setCurrSemesterID, 
           </p>
 
           <Button variant="outline" size="icon" onClick={openStoragePage} className="border-slate-300 dark:border-slate-600 midnight:border-gray-700">
-            <Settings className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:-rotate-90" />
+            <Database className="h-[1.2rem] w-[1.2rem]" />
           </Button>
           <ModeToggle />
         </div>

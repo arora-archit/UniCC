@@ -55,7 +55,9 @@ export default function StatsCards({
               Attendance
             </h2>
             <p className="text-2xl font-bold text-blue-700 dark:text-blue-300 midnight:text-blue-200">
-              {attendancePercentage[attendancePercentageOrString] || 0}%
+              {attendancePercentageOrString === "percentage"
+                ? `${attendancePercentage[attendancePercentageOrString] || 0}%`
+                : attendancePercentage[attendancePercentageOrString] || 0}
             </p>
           </div>
 
